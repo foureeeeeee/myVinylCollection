@@ -47,19 +47,6 @@ export const MediaArchivePage: React.FC<MediaArchivePageProps> = ({ vinyl, onClo
      return `ON ${new Date(vinyl.addedAt).toLocaleDateString()}, THE ARTIST KNOWN AS ${vinyl.artist} WAS CATALOGED INTO THE SYSTEM. THE RECORD, TITLED "${vinyl.title}", RELEASED IN ${vinyl.year}, REPRESENTS A FRAGMENT OF AUDIO HISTORY PRESERVED IN VINYL FORMAT. THIS VISUAL ARCHIVE DECONSTRUCTS THE PHYSICAL ARTIFACT INTO ITS VISUAL COMPONENTS, STRIPPING AWAY COLOR TO REVEAL TEXTURE, FORM, AND THE RAW AESTHETIC OF THE ERA (${vinyl.genre}).\n\n${vinyl.notes ? `NOTES: ${vinyl.notes.toUpperCase()}` : "NO SPECIFIC ARCHIVAL NOTES ATTACHED."}`;
   }, [vinyl]);
 
-  const getVideoSrc = (url: string) => {
-    try {
-        const urlObj = new URL(url);
-        // Extract ID from pathname (e.g., /embed/VIDEO_ID)
-        const id = urlObj.pathname.split('/').pop(); 
-        if (!id) return url;
-        
-        return `${url}?autoplay=1&mute=1&controls=0&loop=1&playlist=${id}`;
-    } catch (e) {
-        return url;
-    }
-  };
-
   return (
     <div className="min-h-screen w-full bg-white text-black font-sans selection:bg-black selection:text-white overflow-x-hidden">
       
@@ -124,7 +111,7 @@ export const MediaArchivePage: React.FC<MediaArchivePageProps> = ({ vinyl, onClo
                                 {item.type === 'video' ? (
                                     <div className="w-full h-full relative">
                                         <iframe 
-                                            src={getVideoSrc(item.url)}
+                                            src={`${item.url}?autoplay=1&mute=1&controls=0&loop=1&playlist=${item.url.split('/').pop()}`}
                                             className="w-[150%] h-[150%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none object-cover grayscale brightness-75 contrast-125"
                                             frameBorder="0"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

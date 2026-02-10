@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Vinyl } from '../types';
-import { X, ArrowUpRight } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface MediaArchivePageProps {
   vinyl: Vinyl;
@@ -10,7 +10,7 @@ interface MediaArchivePageProps {
 
 export const MediaArchivePage: React.FC<MediaArchivePageProps> = ({ vinyl, onClose }) => {
   
-  // Aggregate all media into a single array for the grid
+  // Aggregate all media into a single array
   const mediaItems = useMemo(() => {
     const items: { type: 'video' | 'image', url: string }[] = [];
     
@@ -19,7 +19,7 @@ export const MediaArchivePage: React.FC<MediaArchivePageProps> = ({ vinyl, onClo
       items.push({ type: 'video', url: vinyl.videoUrl });
     }
     
-    // Add Cover (as fallback or primary if no others)
+    // Add Cover
     if (vinyl.coverUrl) {
       items.push({ type: 'image', url: vinyl.coverUrl });
     }
@@ -31,26 +31,54 @@ export const MediaArchivePage: React.FC<MediaArchivePageProps> = ({ vinyl, onClo
       });
     }
 
-    // Ensure we have an even number for the 50/50 split layout
-    // If odd, duplicate the first image/video at the end or add a placeholder
-    if (items.length % 2 !== 0 && items.length > 0) {
-        items.push(items[0]); 
-    }
-
     return items;
   }, [vinyl]);
 
-  // Description Text Logic: Use custom if available, else generated template
+  // Description Text Logic
   const descriptionText = useMemo(() => {
      if (vinyl.archiveDescription) return vinyl.archiveDescription;
 
-     return `ON ${new Date(vinyl.addedAt).toLocaleDateString()}, THE ARTIST KNOWN AS ${vinyl.artist} WAS CATALOGED INTO THE SYSTEM. THE RECORD, TITLED "${vinyl.title}", RELEASED IN ${vinyl.year}, REPRESENTS A FRAGMENT OF AUDIO HISTORY PRESERVED IN VINYL FORMAT. THIS VISUAL ARCHIVE DECONSTRUCTS THE PHYSICAL ARTIFACT INTO ITS VISUAL COMPONENTS, STRIPPING AWAY COLOR TO REVEAL TEXTURE, FORM, AND THE RAW AESTHETIC OF THE ERA (${vinyl.genre}).\n\n${vinyl.notes ? `NOTES: ${vinyl.notes.toUpperCase()}` : "NO SPECIFIC ARCHIVAL NOTES ATTACHED."}`;
+     return `ON ${new Date(vinyl.addedAt).toLocaleDateString()}, THE ARTIST KNOWN AS ${vinyl.artist} WAS CATALOGED INTO THE SYSTEM. THE RECORD, TITLED "${vinyl.title}", RELEASED IN ${vinyl.year}, REPRESENTS A FRAGMENT OF AUDIO HISTORY PRESERVED IN VINYL FORMAT. THIS VISUAL ARCHIVE DECONSTRUCTS THE PHYSICAL ARTIFACT INTO ITS VISUAL COMPONENTS. (${vinyl.genre}).\n\n${vinyl.notes ? `NOTES: ${vinyl.notes.toUpperCase()}` : "NO SPECIFIC ARCHIVAL NOTES ATTACHED."}`;
   }, [vinyl]);
+
+  // Robust YouTube URL parser
+  const getVideoSrc = (url: string) => {
+    try {
+        if (!url) return '';
+        
+        let videoId = '';
+        
+        // Handle standard youtube.com/watch?v=ID
+        if (url.includes('v=')) {
+            videoId = url.split('v=')[1].split('&')[0];
+        } 
+        // Handle youtu.be/ID
+        else if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1].split('?')[0];
+        }
+        // Handle youtube.com/embed/ID
+        else if (url.includes('/embed/')) {
+             videoId = url.split('/embed/')[1].split('?')[0];
+        }
+        
+        // If we found an ID, construct embed URL. 
+        // Removed 'loop' and 'playlist' strict enforcement to prevent glitches with some videos,
+        // but kept autoplay/mute for atmosphere. Added controls=1 so users can unmute/restart.
+        if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&playsinline=1&rel=0`;
+        }
+        
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}autoplay=1&mute=1&controls=1`;
+    } catch (e) {
+        return url;
+    }
+  };
 
   return (
     <div className="min-h-screen w-full bg-white text-black font-sans selection:bg-black selection:text-white overflow-x-hidden">
       
-      {/* 1. Header / Text Section (Pure White) */}
+      {/* 1. Header / Text Section */}
       <section className="relative w-full px-6 py-12 md:px-12 md:py-24 bg-white z-20">
         
         {/* Navigation / Close */}
@@ -93,53 +121,59 @@ export const MediaArchivePage: React.FC<MediaArchivePageProps> = ({ vinyl, onClo
         </div>
       </section>
 
-      {/* 2. Visual Content Area (50/50 Split) */}
-      <section className="relative w-full bg-black z-10">
-         {/* Global Grain Overlay for the visual section */}
+      {/* 2. Visual Content Area */}
+      <section className="relative w-full bg-black z-10 min-h-screen">
+         {/* Global Grain Overlay */}
          <div className="absolute inset-0 opacity-20 pointer-events-none z-50 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
          
-         <div className="flex flex-col w-full">
-            {/* Create rows of 2 items */}
-            {Array.from({ length: Math.ceil(mediaItems.length / 2) }).map((_, rowIndex) => (
-                <div key={rowIndex} className="flex flex-col md:flex-row w-full h-[50vh] md:h-screen">
-                    {[0, 1].map((offset) => {
-                        const item = mediaItems[rowIndex * 2 + offset];
-                        if (!item) return null;
-
-                        return (
-                            <div key={offset} className="relative w-full md:w-1/2 h-full overflow-hidden border-b md:border-b-0 border-white/10 grayscale contrast-125 hover:grayscale-0 hover:contrast-100 transition-all duration-700">
-                                {item.type === 'video' ? (
-                                    <div className="w-full h-full relative">
-                                        <iframe 
-                                            src={`${item.url}?autoplay=1&mute=1&controls=0&loop=1&playlist=${item.url.split('/').pop()}`}
-                                            className="w-[150%] h-[150%] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none object-cover grayscale brightness-75 contrast-125"
-                                            frameBorder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        />
-                                        {/* Block interaction to keep it atmospheric */}
-                                        <div className="absolute inset-0 z-10 bg-transparent" />
-                                    </div>
-                                ) : (
-                                    <motion.img 
-                                        initial={{ scale: 1.1 }}
-                                        whileInView={{ scale: 1 }}
-                                        viewport={{ once: true }}
-                                        transition={{ duration: 1.5, ease: "easeOut" }}
-                                        src={item.url} 
-                                        className="w-full h-full object-cover brightness-90 contrast-125"
-                                    />
-                                )}
-                                
-                                {/* Corner Marker */}
-                                <div className="absolute bottom-4 left-4 z-20 text-[9px] font-mono text-white/50 uppercase tracking-widest border border-white/20 px-2 py-1">
-                                    FIG. {rowIndex * 2 + offset + 1}
-                                </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 w-full">
+            {mediaItems.map((item, index) => {
+               // If total items is odd, make the last one span full width for better layout
+               const isLastAndOdd = (index === mediaItems.length - 1) && (mediaItems.length % 2 !== 0);
+               
+               return (
+                   <div 
+                     key={index} 
+                     className={`relative w-full h-[50vh] md:h-screen overflow-hidden border-b border-white/10 md:border-r ${isLastAndOdd ? 'md:col-span-2 md:border-r-0' : ''}`}
+                   >
+                        {item.type === 'video' ? (
+                            <div className="w-full h-full relative group">
+                                <iframe 
+                                    src={getVideoSrc(item.url)}
+                                    className="w-full h-full absolute top-0 left-0 object-cover"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    title="Archive Video"
+                                />
+                                {/* Overlay to allow interaction only when needed, maintains aesthetic */}
+                                <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto" />
                             </div>
-                        );
-                    })}
-                </div>
-            ))}
+                        ) : (
+                            <motion.img 
+                                initial={{ scale: 1.1 }}
+                                whileInView={{ scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                src={item.url} 
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                className="w-full h-full object-cover" // Removed grayscale filters to show true content
+                            />
+                        )}
+                        
+                        {/* Corner Marker */}
+                        <div className="absolute bottom-4 left-4 z-20 text-[9px] font-mono text-white/50 uppercase tracking-widest border border-white/20 px-2 py-1 bg-black/50 backdrop-blur-sm">
+                            FIG. {index + 1}
+                        </div>
+                   </div>
+               );
+            })}
          </div>
+
+         {mediaItems.length === 0 && (
+             <div className="w-full h-screen flex items-center justify-center text-white/30 font-mono text-xs uppercase tracking-widest">
+                 No Visual Media Archived
+             </div>
+         )}
       </section>
       
       {/* Footer / End Mark */}

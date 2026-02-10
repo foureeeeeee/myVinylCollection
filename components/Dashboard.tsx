@@ -49,6 +49,29 @@ const getBrightness = (imageSrc: string): Promise<'light' | 'dark'> => {
   });
 };
 
+const getEmbedUrl = (url: string) => {
+    try {
+        if (!url) return '';
+        let videoId = '';
+        if (url.includes('v=')) {
+            videoId = url.split('v=')[1].split('&')[0];
+        } else if (url.includes('youtu.be/')) {
+            videoId = url.split('youtu.be/')[1].split('?')[0];
+        } else if (url.includes('/embed/')) {
+             videoId = url.split('/embed/')[1].split('?')[0];
+        }
+        
+        if (videoId) {
+            return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&controls=1&playsinline=1&rel=0`;
+        }
+        
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}autoplay=1`;
+    } catch (e) {
+        return url;
+    }
+};
+
 interface CurtainHookProps {
   isOpen: boolean;
   onClick: () => void;
@@ -765,9 +788,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ collection, theme, initial
                                 <div><h3 className={`text-[10px] font-bold uppercase tracking-widest mb-1 flex items-center gap-2 ${textColor}`}>Media Archive</h3><p className={`text-[10px] opacity-60 ${textColor}`}>Click to enter full immersive view</p></div>
                                 <ArrowUpRight className={`opacity-50 group-hover:opacity-100 transition-opacity ${textColor}`} size={16} />
                             </button>
-                            <div className="mt-4 flex gap-2 overflow-hidden opacity-50 grayscale hover:grayscale-0 transition-all pointer-events-none">
-                                {currentVinyl.videoUrl && <div className="w-16 h-10 bg-black rounded" />}
-                                {currentVinyl.additionalImages?.slice(0, 3).map((img, idx) => (<img key={idx} src={img} className="w-16 h-10 object-cover rounded" />))}
+                            {/* Make thumbnails clickable */}
+                            <div className="mt-4 flex gap-2 overflow-hidden">
+                                {currentVinyl.videoUrl && (
+                                   <div onClick={() => onOpenMediaArchive?.(currentVinyl)} className="w-16 h-10 bg-black rounded cursor-pointer opacity-50 hover:opacity-100 transition-opacity" title="Play Video" />
+                                )}
+                                {currentVinyl.additionalImages?.slice(0, 3).map((img, idx) => (
+                                    <img 
+                                        key={idx} 
+                                        src={img} 
+                                        onClick={() => onOpenMediaArchive?.(currentVinyl)}
+                                        className="w-16 h-10 object-cover rounded cursor-pointer opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
+                                    />
+                                ))}
                             </div>
                         </motion.div>
                      )}
@@ -797,7 +830,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ collection, theme, initial
                 </div>
                 <div className="flex-1 relative z-10 flex items-center justify-center p-4 md:p-12 overflow-hidden">
                     {mediaView.type === 'video' ? (
-                        <div className="w-full h-full max-w-7xl max-h-[80vh] bg-black shadow-2xl relative"><iframe width="100%" height="100%" src={`${currentVinyl.videoUrl}?autoplay=1`} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe></div>
+                        <div className="w-full h-full max-w-7xl max-h-[80vh] bg-black shadow-2xl relative"><iframe width="100%" height="100%" src={getEmbedUrl(currentVinyl.videoUrl || '')} title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe></div>
                     ) : (
                         <div className="w-full h-full flex items-center justify-center relative">
                              <div className="absolute top-0 left-0 max-w-xs hidden xl:block p-4"><p className={`text-xs font-mono leading-relaxed mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>On {new Date(currentVinyl.addedAt).toLocaleDateString()}, this record was cataloged...<br/><br/>ARTIST: {currentVinyl.artist}<br/>FORMAT: 12" Vinyl</p></div>

@@ -871,7 +871,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ collection, theme, initial
                         <p className={`text-xs opacity-60 max-w-xs mx-auto ${textColor}`}>Restore your collection from a previously exported JSON file. <br/><span className="text-red-500">Warning: This will overwrite current data.</span></p>
                     </div>
                     <input type="file" accept=".json" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
-                    <button onClick={() => fileInputRef.current?.click()} className={`mt-auto px-8 py-3 rounded-full flex items-center gap-2 text-xs font-bold uppercase tracking-widest border transition-all ${theme === 'dark' ? 'border-white/20 text-white hover:bg-white hover:text-black' : 'border-black/20 text-black hover:bg-black hover:text-white'}`}>
+                    <button onClick={() => fileInputRef.current?.click()} className={`mt-auto px-8 py-3 rounded-full flex items-center gap-2 text-xs font-bold uppercase tracking-widest border transition-all ${theme === 'dark' ? 'border-white/20 text-white hover:bg-white hover:text-black' : 'border-black/20 text-black hover:bg-black/text-white'}`}>
                         <Upload size={14} /> Select File
                     </button>
                 </div>
@@ -908,7 +908,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ collection, theme, initial
                 <div className="flex flex-col h-full min-h-[300px]">
                    <div className="border-t border-current pt-4 h-full flex flex-col">
                       <p className={`text-[10px] font-mono uppercase tracking-widest mb-6 ${dimColor}`}>Genre Distribution</p>
-                      <div className="flex-1 w-full"><ResponsiveContainer width="100%" height="100%"><BarChart data={stats.chartData} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}><XAxis type="number" hide /><YAxis dataKey="name" type="category" width={100} tick={{ fill: theme === 'dark' ? 'white' : 'black', fontSize: 10, fontFamily: 'monospace', textTransform: 'uppercase' }} axisLine={false} tickLine={false} /><Tooltip cursor={{fill: 'transparent'}} contentStyle={{ backgroundColor: theme === 'dark' ? '#000' : '#fff', border: '1px solid #333', fontSize: '10px', textTransform: 'uppercase' }} /><Bar dataKey="value" barSize={12} radius={[0, 4, 4, 0]}>{stats.chartData.map((_, index) => <Cell key={`cell-${index}`} fill={theme === 'dark' ? '#fff' : '#000'} />)}</Bar></BarChart></ResponsiveContainer></div>
+                      <div className="flex-1 w-full"><ResponsiveContainer width="100%" height="100%"><BarChart data={stats.chartData} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}><XAxis type="number" hide /><YAxis dataKey="name" type="category" width={100} tick={{ fill: theme === 'dark' ? 'white' : 'black', fontSize: 10, fontFamily: 'monospace', style: { textTransform: 'uppercase' } }} axisLine={false} tickLine={false} /><Tooltip cursor={{fill: 'transparent'}} contentStyle={{ backgroundColor: theme === 'dark' ? '#000' : '#fff', border: '1px solid #333', fontSize: '10px', textTransform: 'uppercase' }} /><Bar dataKey="value" barSize={12} radius={[0, 4, 4, 0]}>{stats.chartData.map((_, index) => <Cell key={`cell-${index}`} fill={theme === 'dark' ? '#fff' : '#000'} />)}</Bar></BarChart></ResponsiveContainer></div>
                    </div>
                 </div>
              </div>

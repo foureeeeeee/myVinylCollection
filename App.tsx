@@ -91,8 +91,12 @@ const App: React.FC = () => {
   // Helper to find the active vinyl object safely
   const activeVinyl = collection.find(v => v.id === activeVinylId);
 
+  // Determine scroll behavior based on view
+  const isFixedView = view === 'dashboard' || view === 'shelf';
+  const scrollClass = isFixedView ? 'h-screen overflow-hidden' : 'overflow-x-hidden min-h-screen';
+
   return (
-    <div className={`min-h-screen font-sans selection:bg-gray-500 selection:text-white overflow-hidden transition-colors duration-500 ${theme === 'dark' ? 'bg-[#050505] text-white' : 'bg-[#f4f4f4] text-black'}`}>
+    <div className={`${scrollClass} font-sans selection:bg-gray-500 selection:text-white transition-colors duration-500 ${theme === 'dark' ? 'bg-[#050505] text-white' : 'bg-[#f4f4f4] text-black'}`}>
       
       {/* Hide Navbar when in immersive Media Archive mode */}
       {view !== 'media-archive' && (
@@ -107,7 +111,7 @@ const App: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="w-full min-h-screen"
+            className={`w-full ${isFixedView ? 'h-full' : 'min-h-screen'}`}
           >
             {view === 'dashboard' && (
               <Dashboard 
@@ -141,6 +145,7 @@ const App: React.FC = () => {
             
             {view === 'media-archive' && activeVinyl && (
                 <MediaArchivePage 
+                    key={activeVinyl.id}
                     vinyl={activeVinyl} 
                     onClose={() => setView('dashboard')} 
                 />
